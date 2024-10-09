@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import bridgeJSON from "../../broadcast/Bridge.s.sol/31337/run-latest.json" assert { type: "json" };
+import bridgeJSON from "../../contracts/broadcast/Bridge.s.sol/31337/run-latest.json" assert { type: "json" };
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 
@@ -24,9 +24,9 @@ const eventSchema = new mongoose.Schema({
 
 const Event = mongoose.model("Event", eventSchema);
 
-const provider = new ethers.providers.JsonRpcProvider(
-  process.env.SEPOLIA_ENDPOINT
-);
+console.log(ethers);
+// const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_ENDPOINT);
+const provider = new ethers.JsonRpcProvider();
 
 const bridgeAddress = "0xf17bb16952A76DC90503D714B5346fC7E6B0AA43";
 const bridgeABI = bridgeJSON.abi;

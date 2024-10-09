@@ -2,7 +2,7 @@
 pragma solidity ^0.8.27;
 
 import {Script, console} from "forge-std/Script.sol";
-import {Bridge} from "../src/contracts/Bridge.sol";
+import {Bridge} from "../src/Bridge.sol";
 
 contract BridgeScript is Script {
     Bridge public bridge;
