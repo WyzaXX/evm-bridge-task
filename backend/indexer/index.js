@@ -67,7 +67,6 @@ async function listenEvents() {
   await processEvents(lastProcessedBlock + 1);
 
   bridgeContract.on("TokenLocked", async (token, user, amount, event) => {
-    console.log(event);
     const newEvent = new Event({
       event: "TokenLocked",
       tokenAddress: token,

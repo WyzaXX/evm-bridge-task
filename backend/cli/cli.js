@@ -50,17 +50,6 @@ async function lock(tokenAddress, amount) {
   );
 
   await approveTx.wait();
-  console.log(`Approval transaction confirmed: ${approveTx.hash}`);
-
-  // const approval = await dannyTokenContract.allowance(
-  //   wallet.address,
-  //   bridgeAddress
-  // );
-  // console.log(`Approval: ${approval.toString()}`);
-
-  // const balance = await dannyTokenContract.balanceOf(wallet.address);
-  // console.log(`Balance: ${balance.toString()}`);
-
   const tx = await bridgeContract.lockTokens(
     tokenAddress,
     ethers.parseUnits(amount, 18),
