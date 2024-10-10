@@ -1,6 +1,10 @@
 import express from "express";
 import mongoose from "mongoose";
 import { eventSchema } from "../schemas/events.js";
+import dotenv from "dotenv";
+
+dotenv.config();
+
 
 const PORT = 8080;
 
