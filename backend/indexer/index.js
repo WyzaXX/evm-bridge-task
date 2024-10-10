@@ -17,8 +17,12 @@ mongoose
 
 const Event = mongoose.model("Event", eventSchema);
 
-// const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_ENDPOINT);
-// const bridgeAddress = "0xf17bb16952A76DC90503D714B5346fC7E6B0AA43";
+// const sepoliaProvider = new ethers.JsonRpcProvider(process.env.SEPOLIA_ENDPOINT);
+// const baseSepoliaProvider = new ethers.JsonRpcProvider(process.env.BASE_SEPOLIA_ENDPOINT);
+// const mainBridgeAddress = process.env.BRIDGE_SEPOLIA_ADDRESS;
+// const targetBridgeAddress = process.env.BRIDGE_BASE_SEPOLIA_ADDRESS;
+// const dannyTokenAddress = process.env.DANNY_TOKEN_ADDRESS;
+// const wrappedTokenAddress = process.env.WRAPPED_TOKEN_ADDRESS;
 
 const provider = new ethers.JsonRpcProvider(process.env.TEST_ENDPOINT);
 const bridgeAddress = process.env.TEST_BRIDGE;
@@ -39,7 +43,6 @@ async function processPastEvents(fromBlock, toBlock) {
     fromBlock,
     toBlock,
     topics: [
-      // Add the topics for the events you want to process
       bridgeContract.filters.TokenClaimed().topics,
       bridgeContract.filters.TokenBurned().topics,
       bridgeContract.filters.TokenReleased().topics,

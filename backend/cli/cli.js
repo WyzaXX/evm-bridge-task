@@ -14,12 +14,15 @@ if (!process.env.SEPOLIA_ENDPOINT) {
   throw new Error("SEPOLIA_ENDPOINT is not defined in env");
 }
 
-// const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_ENDPOINT);
-// const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-// const bridgeAddress = "0xf17bb16952A76DC90503D714B5346fC7E6B0AA43";
-// const dannyTokenAddress = "0xDCa8458d61210E227e4998e3E92cE7a97DE7A99f";
+// const sepoliaProvider = new ethers.JsonRpcProvider(process.env.SEPOLIA_ENDPOINT);
+// const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, sepoliaProvider);
+// const baseSepoliaProvider = new ethers.JsonRpcProvider(process.env.BASE_SEPOLIA_ENDPOINT);
+// const mainBridgeAddress = process.env.BRIDGE_SEPOLIA_ADDRESS;
+// const targetBridgeAddress = process.env.BRIDGE_BASE_SEPOLIA_ADDRESS;
+// const dannyTokenAddress = process.env.DANNY_TOKEN_ADDRESS;
+// const wrappedTokenAddress = process.env.WRAPPED_TOKEN_ADDRESS;
 
-const provider = new ethers.JsonRpcProvider("http://localhost:8555");
+const provider = new ethers.JsonRpcProvider(process.env.TEST_ENDPOINT);
 const wallet = new ethers.Wallet(process.env.TEST_PRIVATE_KEY, provider);
 const bridgeAddress = process.env.TEST_BRIDGE;
 const dannyTokenAddress = process.env.TEST_DANNY_TOKEN;
