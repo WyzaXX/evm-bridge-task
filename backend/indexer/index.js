@@ -20,7 +20,7 @@ const Event = mongoose.model("Event", eventSchema);
 // const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_ENDPOINT);
 // const bridgeAddress = "0xf17bb16952A76DC90503D714B5346fC7E6B0AA43";
 
-const provider = new ethers.JsonRpcProvider("http://localhost:8555");
+const provider = new ethers.JsonRpcProvider(process.env.TEST_ENDPOINT);
 const bridgeAddress = process.env.TEST_BRIDGE;
 const dannyTokenAddress = process.env.TEST_DANNY_TOKEN;
 const bridgeABI = bridgeJSON.abi;
@@ -31,12 +31,44 @@ async function getLastProcessedBlock() {
   return lastEvent ? lastEvent.blockNumber : 0;
 }
 
-async function processEvents(fromBlock) {
-  const currentBlock = await provider.getBlockNumber();
+async function processPastEvents(fromBlock, toBlock) {
+  console.log("Processing events from block", fromBlock, "to block", toBlock);
+
   const filter = {
     address: bridgeAddress,
     fromBlock,
-    toBlock: currentBlock,
+    toBlock,
+    topics: [
+      // Add the topics for the events you want to process
+      bridgeContract.filters.TokenClaimed().topics,
+      bridgeContract.filters.TokenBurned().topics,
+      bridgeContract.filters.TokenReleased().topics,
+      bridgeContract.filters.TokenLocked().topics,
+    ],
+  };
+
+  const events = await provider.getLogs(filter);
+  for (const event of events) {
+    const parsedEvent = bridgeContract.interface.parseLog(event);
+    const { name, args } = parsedEvent;
+
+    const newEvent = new Event({
+      event: name,
+      tokenAddress: args.token,
+      userAddress: args.user,
+      amount: args.amount.toString(),
+      blockNumber: event.blockNumber,
+    });
+    await newEvent.save();
+    console.log(`${name} event saved:`, newEvent);
+  }
+}
+
+async function processEvents(fromBlock, toBlock) {
+  const filter = {
+    address: bridgeAddress,
+    fromBlock,
+    toBlock: toBlock,
     topics: [
       ethers.id("TokenLocked(address,address,uint256)"),
       ethers.id("TokenClaimed(address,address,uint256)"),
@@ -64,7 +96,10 @@ async function processEvents(fromBlock) {
 async function listenEvents() {
   const lastProcessedBlock = await getLastProcessedBlock();
   console.log("Last processed block:", lastProcessedBlock);
-  await processEvents(lastProcessedBlock + 1);
+  const currentBlock = await provider.getBlockNumber();
+  if (lastProcessedBlock < currentBlock) {
+    await processPastEvents(lastProcessedBlock + 1, currentBlock);
+  }
 
   bridgeContract.on("TokenLocked", async (token, user, amount, event) => {
     const newEvent = new Event({
@@ -112,6 +147,13 @@ async function listenEvents() {
     });
     await newEvent.save();
     console.log("TokenReleased event saved:", newEvent);
+  });
+
+  provider.on("block", async (blockNumber) => {
+    console.log("New block mined:", blockNumber);
+    const lastProcessedBlock = await getLastProcessedBlock();
+    console.log("Last processed block:", lastProcessedBlock);
+    await processEvents(lastProcessedBlock + 1, blockNumber);
   });
 }
 

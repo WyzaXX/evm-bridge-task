@@ -1,24 +1,17 @@
 import express from "express";
 import mongoose from "mongoose";
+import { eventSchema } from "../schemas/events.js";
+
+const PORT = 8080;
 
 mongoose
-  .connect("mongodb://localhost:27017/bridge", {
-    useNewUrlParser: true,
-  })
+  .connect(process.env.MONGO_CONNECTION_STRING)
   .then(() => {
     console.log("Connected to MongoDB");
   })
   .catch((error) => {
     console.error("Error connecting to MongoDB:", error);
   });
-
-const eventSchema = new mongoose.Schema({
-  event: String,
-  token: String,
-  user: String,
-  amount: String,
-  blockNumber: Number,
-});
 
 const Event = mongoose.model("Event", eventSchema);
 
@@ -33,28 +26,32 @@ const validateAddress = (req, res, next) => {
   next();
 };
 
-app.get("/tokens/locked", async (req, res) => {
+app.get("/api/tokens/locked", async (req, res) => {
   const events = await Event.find({ event: "TokenLocked" });
   res.json(events);
 });
 
-app.get("/tokens/released", async (req, res) => {
+app.get("/api/tokens/released", async (req, res) => {
   const events = await Event.find({ event: "TokenReleased" });
   res.json(events);
 });
 
-app.get("/tokens/bridged/:walletAddress", validateAddress, async (req, res) => {
-  const events = await Event.find({ user: req.params.walletAddress });
-  res.json(events);
-});
+app.get(
+  "/api/tokens/bridged/:walletAddress",
+  validateAddress,
+  async (req, res) => {
+    const events = await Event.find({ user: req.params.walletAddress });
+    res.json(events);
+  }
+);
 
-app.get("/tokens/erc20", async (req, res) => {
+app.get("/api/tokens/erc20", async (req, res) => {
   const events = await Event.find({
     event: { $in: ["TokenLocked", "TokenReleased"] },
   });
   res.json(events);
 });
 
-app.listen(3000, () => {
-  console.log("API server running on port 3000");
+app.listen(PORT, () => {
+  console.log(`API server running on port ${PORT}`);
 });
