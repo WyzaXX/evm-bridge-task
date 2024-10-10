@@ -11,5 +11,5 @@ deploy-wrappedToken:
     @set -a; source .env; set +a; \
     forge script script/WrappedToken.s.sol --rpc-url $$BASE_SEPOLIA_ENDPOINT --private-key $$PRIVATE_KEY --chain 84532
 deploy-test-bridge:
-	@set -a; source .env; set +a; \
+    @set -a; source .env; set +a; \
     forge script script/Bridge.s.sol --rpc-url $$TEST_ENDPOINT --private-key $$TEST_PRIVATE_KEY --broadcast
