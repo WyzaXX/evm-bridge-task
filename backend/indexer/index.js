@@ -1,12 +1,13 @@
 import { ethers } from "ethers";
-import bridgeJSON from "../../contracts/broadcast/Bridge.s.sol/31337/run-latest.json" assert { type: "json" };
+import bridgeJSON from "../../contracts/out/Bridge.sol/Bridge.json" assert { type: "json" };
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import { eventSchema } from "../schemas/events.js";
 
 dotenv.config();
 
 mongoose
-  .connect("mongodb://localhost:27017/bridge", { useUnifiedTopology: true })
+  .connect(process.env.MONGO_CONNECTION_STRING)
   .then(() => {
     console.log("Connected to MongoDB");
   })
@@ -14,21 +15,14 @@ mongoose
     console.error("Error connecting to MongoDB:", error);
   });
 
-const eventSchema = new mongoose.Schema({
-  event: String,
-  token: String,
-  user: String,
-  amount: String,
-  blockNumber: Number,
-});
-
 const Event = mongoose.model("Event", eventSchema);
 
-console.log(ethers);
 // const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_ENDPOINT);
-const provider = new ethers.JsonRpcProvider();
+// const bridgeAddress = "0xf17bb16952A76DC90503D714B5346fC7E6B0AA43";
 
-const bridgeAddress = "0xf17bb16952A76DC90503D714B5346fC7E6B0AA43";
+const provider = new ethers.JsonRpcProvider("http://localhost:8555");
+const bridgeAddress = process.env.TEST_BRIDGE;
+const dannyTokenAddress = process.env.TEST_DANNY_TOKEN;
 const bridgeABI = bridgeJSON.abi;
 const bridgeContract = new ethers.Contract(bridgeAddress, bridgeABI, provider);
 
@@ -44,10 +38,10 @@ async function processEvents(fromBlock) {
     fromBlock,
     toBlock: currentBlock,
     topics: [
-      ethers.utils.id("TokenLocked(address,address,uint256)"),
-      ethers.utils.id("TokenClaimed(address,address,uint256)"),
-      ethers.utils.id("TokenBurned(address,address,uint256)"),
-      ethers.utils.id("TokenReleased(address,address,uint256)"),
+      ethers.id("TokenLocked(address,address,uint256)"),
+      ethers.id("TokenClaimed(address,address,uint256)"),
+      ethers.id("TokenBurned(address,address,uint256)"),
+      ethers.id("TokenReleased(address,address,uint256)"),
     ],
   };
 
@@ -57,8 +51,8 @@ async function processEvents(fromBlock) {
     const { name, args } = parsedLog;
     const newEvent = new Event({
       event: name,
-      token: args.token,
-      user: args.user,
+      tokenAddress: args.token,
+      userAddress: args.user,
       amount: args.amount.toString(),
       blockNumber: log.blockNumber,
     });
@@ -73,12 +67,13 @@ async function listenEvents() {
   await processEvents(lastProcessedBlock + 1);
 
   bridgeContract.on("TokenLocked", async (token, user, amount, event) => {
+    console.log(event);
     const newEvent = new Event({
       event: "TokenLocked",
-      token,
-      user,
+      tokenAddress: token,
+      userAddress: user,
       amount: amount.toString(),
-      blockNumber: event.blockNumber,
+      blockNumber: event.log.blockNumber,
     });
     await newEvent.save();
     console.log("TokenLocked event saved:", newEvent);
@@ -87,10 +82,10 @@ async function listenEvents() {
   bridgeContract.on("TokenClaimed", async (token, user, amount, event) => {
     const newEvent = new Event({
       event: "TokenClaimed",
-      token,
-      user,
+      tokenAddress: token,
+      userAddress: user,
       amount: amount.toString(),
-      blockNumber: event.blockNumber,
+      blockNumber: event.log.blockNumber,
     });
     await newEvent.save();
     console.log("TokenClaimed event saved:", newEvent);
@@ -99,10 +94,10 @@ async function listenEvents() {
   bridgeContract.on("TokenBurned", async (token, user, amount, event) => {
     const newEvent = new Event({
       event: "TokenBurned",
-      token,
-      user,
+      tokenAddress: token,
+      userAddress: user,
       amount: amount.toString(),
-      blockNumber: event.blockNumber,
+      blockNumber: event.log.blockNumber,
     });
     await newEvent.save();
     console.log("TokenBurned event saved:", newEvent);
@@ -111,10 +106,10 @@ async function listenEvents() {
   bridgeContract.on("TokenReleased", async (token, user, amount, event) => {
     const newEvent = new Event({
       event: "TokenReleased",
-      token,
-      user,
+      tokenAddress: token,
+      userAddress: user,
       amount: amount.toString(),
-      blockNumber: event.blockNumber,
+      blockNumber: event.log.blockNumber,
     });
     await newEvent.save();
     console.log("TokenReleased event saved:", newEvent);
