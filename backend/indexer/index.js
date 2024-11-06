@@ -100,6 +100,7 @@ async function listenEvents() {
   const lastProcessedBlock = await getLastProcessedBlock();
   console.log("Last processed block:", lastProcessedBlock);
   const currentBlock = await provider.getBlockNumber();
+
   if (lastProcessedBlock < currentBlock) {
     await processPastEvents(lastProcessedBlock + 1, currentBlock);
   }

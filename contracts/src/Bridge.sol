@@ -3,6 +3,7 @@ pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./WrappedToken.sol";
 
 contract Bridge {
     using SafeERC20 for IERC20;
@@ -37,25 +38,25 @@ contract Bridge {
     }
 
     function claimTokens(address token, uint256 amount) external {
-        require(
-            lockedTokens[token][msg.sender] >= amount,
-            "Insufficient locked tokens"
-        );
-        lockedTokens[token][msg.sender] -= amount;
-        IERC20(token).safeTransfer(msg.sender, amount);
+        WrappedToken(token).mint(msg.sender, amount);
         emit TokenClaimed(token, msg.sender, amount);
     }
 
     function burnTokens(address token, uint256 amount) external {
         require(
-            lockedTokens[token][msg.sender] >= amount,
-            "Insufficient locked tokens"
+            WrappedToken(token).balanceOf(msg.sender) >= amount,
+            "Insufficient burnable tokens"
         );
-        lockedTokens[token][msg.sender] -= amount;
+        WrappedToken(token).burn(msg.sender, amount);
         emit TokenBurned(token, msg.sender, amount);
     }
 
     function releaseTokens(address token, uint256 amount) external {
+        require(
+            lockedTokens[token][msg.sender] >= amount,
+            "Insufficient locked tokens"
+        );
+        lockedTokens[token][msg.sender] -= amount;
         IERC20(token).safeTransfer(msg.sender, amount);
         emit TokenReleased(token, msg.sender, amount);
     }
